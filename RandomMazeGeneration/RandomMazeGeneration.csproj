@@ -53,10 +53,19 @@
     <Compile Include="frmMazeBoard.Designer.cs">
       <DependentUpon>frmMazeBoard.cs</DependentUpon>
     </Compile>
+    <Compile Include="frmMazeInput.cs">
+      <SubType>Form</SubType>
+    </Compile>
+    <Compile Include="frmMazeInput.Designer.cs">
+      <DependentUpon>frmMazeInput.cs</DependentUpon>
+    </Compile>
     <Compile Include="Program.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
     <EmbeddedResource Include="frmMazeBoard.resx">
       <DependentUpon>frmMazeBoard.cs</DependentUpon>
+    </EmbeddedResource>
+    <EmbeddedResource Include="frmMazeInput.resx">
+      <DependentUpon>frmMazeInput.cs</DependentUpon>
     </EmbeddedResource>
     <EmbeddedResource Include="Properties\Resources.resx">
       <Generator>ResXFileCodeGenerator</Generator>

@@ -28,21 +28,54 @@
         /// </summary>
         private void InitializeComponent()
         {
+            this.components = new System.ComponentModel.Container();
+            System.ComponentModel.ComponentResourceManager resources = new System.ComponentModel.ComponentResourceManager(typeof(frmMazeBoard));
+            this.imgMazeBoard = new System.Windows.Forms.ImageList(this.components);
             this.SuspendLayout();
+            // 
+            // imgMazeBoard
+            // 
+            this.imgMazeBoard.ImageStream = ((System.Windows.Forms.ImageListStreamer)(resources.GetObject("imgMazeBoard.ImageStream")));
+            this.imgMazeBoard.TransparentColor = System.Drawing.Color.Transparent;
+            this.imgMazeBoard.Images.SetKeyName(0, "maze_00");
+            this.imgMazeBoard.Images.SetKeyName(1, "maze_01");
+            this.imgMazeBoard.Images.SetKeyName(2, "maze_02");
+            this.imgMazeBoard.Images.SetKeyName(3, "maze_03");
+            this.imgMazeBoard.Images.SetKeyName(4, "maze_04");
+            this.imgMazeBoard.Images.SetKeyName(5, "maze_05");
+            this.imgMazeBoard.Images.SetKeyName(6, "maze_06");
+            this.imgMazeBoard.Images.SetKeyName(7, "maze_07");
+            this.imgMazeBoard.Images.SetKeyName(8, "maze_08");
+            this.imgMazeBoard.Images.SetKeyName(9, "maze_09");
+            this.imgMazeBoard.Images.SetKeyName(10, "maze_10");
+            this.imgMazeBoard.Images.SetKeyName(11, "maze_11");
+            this.imgMazeBoard.Images.SetKeyName(12, "maze_12");
+            this.imgMazeBoard.Images.SetKeyName(13, "maze_13");
+            this.imgMazeBoard.Images.SetKeyName(14, "maze_14");
+            this.imgMazeBoard.Images.SetKeyName(15, "maze_15");
+            this.imgMazeBoard.Images.SetKeyName(16, "maze_start");
+            this.imgMazeBoard.Images.SetKeyName(17, "maze_end");
             // 
             // frmMazeBoard
             // 
             this.AutoScaleDimensions = new System.Drawing.SizeF(6F, 13F);
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
-            this.ClientSize = new System.Drawing.Size(284, 261);
+            this.ClientSize = new System.Drawing.Size(60, 30);
+            this.Font = new System.Drawing.Font("Tahoma", 8.25F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
+            this.FormBorderStyle = System.Windows.Forms.FormBorderStyle.FixedSingle;
+            this.MaximizeBox = false;
             this.Name = "frmMazeBoard";
+            this.StartPosition = System.Windows.Forms.FormStartPosition.CenterScreen;
             this.Text = "Maze Board";
             this.Load += new System.EventHandler(this.frmMazeBoard_Load);
+            this.Paint += new System.Windows.Forms.PaintEventHandler(this.frmMazeBoard_Paint);
+            this.MouseClick += new System.Windows.Forms.MouseEventHandler(this.frmMazeBoard_MouseClick);
             this.ResumeLayout(false);
 
         }
 
         #endregion
+
+        private System.Windows.Forms.ImageList imgMazeBoard;
     }
 }
-

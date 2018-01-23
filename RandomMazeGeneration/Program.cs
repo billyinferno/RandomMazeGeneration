@@ -16,7 +16,7 @@ namespace RandomMazeGeneration
         {
             Application.EnableVisualStyles();
             Application.SetCompatibleTextRenderingDefault(false);
-            Application.Run(new frmMazeBoard());
+            Application.Run(new frmMazeInput());
         }
     }
 }

@@ -10,7 +10,7 @@ namespace RandomMazeGeneration.Core
     class Node
     {
         public bool HasVisited { get; set; }
-        public bool CanVisited { get; set; }
+        public bool MainNode { get; set; }
 
         public bool Up { get; set; }
         public bool Down { get; set; }
@@ -20,7 +20,7 @@ namespace RandomMazeGeneration.Core
         public Node()
         {
             this.HasVisited = false;
-            this.CanVisited = true;
+            this.MainNode = false;
             this.Up = false;
             this.Down = false;
             this.Left = false;
@@ -38,32 +38,32 @@ namespace RandomMazeGeneration.Core
             // so for example if UP and DOWN is set as true then the bit should be
             //  4 3 2 1
             // +-+-+-+-+
-            //  1 0 1 0 --> which is will be translate into 10, means that we will load ImageIndex 10, which should have gate opened on UP and DOWN
+            //  0 1 0 1 --> which is will be translate into 10, means that we will load ImageIndex 5, which should have gate opened on UP and DOWN
 
             int Result = 0;
 
             // Check for UP
             if (this.Up)
             {
-                Result = (Result | (1 << 1));
+                Result += 1;
             }
 
             // Check for RIGHT
             if (this.Right)
             {
-                Result = (Result | (1 << 2));
+                Result += 2;
             }
 
             // Check for DOWN
             if (this.Down)
             {
-                Result = (Result | (1 << 3));
+                Result += 4;
             }
 
             // Check for LEFT
-            if (this.Up)
+            if (this.Left)
             {
-                Result = (Result | (1 << 4));
+                Result += 8;
             }
 
             // return the image index result
