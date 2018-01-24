@@ -10,13 +10,30 @@ using System.Windows.Forms;
 
 namespace RandomMazeGeneration
 {
+    /// <summary>
+    /// Maze Input Form
+    /// 
+    /// Here user can input the X and Y size of the maze, and press GENERATE button
+    /// to generate the maze.
+    /// </summary>
     public partial class frmMazeInput : Form
     {
+        /// <summary>
+        /// Constructor of the Maze Input form
+        /// </summary>
         public frmMazeInput()
         {
             InitializeComponent();
         }
 
+        #region FORM_CONTROL
+        /// <summary>
+        /// Generate the maze based on the input mentioned at txtX and txtY fields on the form.
+        /// We will going to limit the input for the txtX (42) and txtY (24), to avoid the size
+        /// of the form will exceed 1280 x 720 pixel, to avoid cropped form for non FullHD monitor.
+        /// </summary>
+        /// <param name="sender">Sender object</param>
+        /// <param name="e">Button event arguments</param>
         private void cmdGenerate_Click(object sender, EventArgs e)
         {
             // check whether both X and Y already filled by user
@@ -64,11 +81,16 @@ namespace RandomMazeGeneration
 
                 // all value is correct, now create the new form, and close this form
                 frmMazeBoard frm = new frmMazeBoard(X, Y);
-                frm.ShowDialog();
-
-                // set the form into null
-                frm.Dispose();
-                frm = null;
+                try
+                {
+                    frm.ShowDialog();
+                }
+                finally
+                {
+                    // set the form into null
+                    frm.Dispose();
+                    frm = null;
+                }
             }
             else
             {
@@ -76,5 +98,6 @@ namespace RandomMazeGeneration
                 MessageBox.Show("Please fill all fields needed for generating the maze.", "Fields Blank", MessageBoxButtons.OK, MessageBoxIcon.Error);
             }
         }
+        #endregion
     }
 }

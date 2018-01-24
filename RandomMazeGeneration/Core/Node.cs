@@ -7,6 +7,14 @@ using System.Drawing;
 
 namespace RandomMazeGeneration.Core
 {
+    /// <summary>
+    /// Node
+    /// 
+    /// This will be used to store the Node Data of the Maze.
+    /// The node will stored which direction is allowed for player navigation,
+    /// and indicator whether the node is already visited or node so we knew
+    /// the direction we need to go during generation of the maze.
+    /// </summary>
     class Node
     {
         public bool HasVisited { get; set; }
@@ -17,6 +25,9 @@ namespace RandomMazeGeneration.Core
         public bool Left { get; set; }
         public bool Right { get; set; }
 
+        /// <summary>
+        /// Constructor of the Node Class.
+        /// </summary>
         public Node()
         {
             this.HasVisited = false;
@@ -27,6 +38,10 @@ namespace RandomMazeGeneration.Core
             this.Right = false;
         }
 
+        /// <summary>
+        /// Get the image index of the node based on the direction set on the Node.
+        /// </summary>
+        /// <returns>Image index for the Node</returns>
         public int GetImageIndex()
         {
             // we can get the image index by set the bit of the Up, Down, Left, and Right
@@ -38,7 +53,7 @@ namespace RandomMazeGeneration.Core
             // so for example if UP and DOWN is set as true then the bit should be
             //  4 3 2 1
             // +-+-+-+-+
-            //  0 1 0 1 --> which is will be translate into 10, means that we will load ImageIndex 5, which should have gate opened on UP and DOWN
+            //  0 1 0 1 --> which is will be translate into (0101), means that we will load ImageIndex (5), which should have gate opened on UP and DOWN
 
             int Result = 0;
 

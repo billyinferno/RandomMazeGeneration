@@ -6,9 +6,17 @@ using System.Threading.Tasks;
 
 namespace RandomMazeGeneration.Core
 {
+    /// <summary>
+    /// Maze Class
+    /// 
+    /// This class will be generate the Maze Board and perform generation of the
+    /// maze using Backtracking Stack Algorithm and Heat Map Algorithm to
+    /// ensure that all the node is accessible (no closed node).
+    /// </summary>
     class Maze
     {
         public Node[,] MazeNode { get; private set; }
+        private int[,] HeatMap;
 
         public int MaxX { get; private set; }
         public int MaxY { get; set; }
@@ -20,6 +28,11 @@ namespace RandomMazeGeneration.Core
 
         private Random RndSeed;
 
+        /// <summary>
+        /// Constructor of the Maze Class.
+        /// </summary>
+        /// <param name="X">X size of the Maze Board</param>
+        /// <param name="Y">Y size of the Maze Board</param>
         public Maze(int X, int Y)
         {
             int i, j;
@@ -27,12 +40,19 @@ namespace RandomMazeGeneration.Core
             // create the Maze Node based on the X and Y sent to the constructor
             this.MazeNode = new Node[X,Y];
 
+            // create the heat map for this maze
+            this.HeatMap = new int[X, Y];
+
             // initialize all the Node data
             for (i = 0; i < X; i++)
             {
                 for (j = 0; j < Y; j++)
                 {
+                    // create new node
                     this.MazeNode[i, j] = new Node();
+
+                    // assuming that this is a blocked path
+                    this.HeatMap[i, j] = 0;
                 }
             }
 
@@ -45,164 +65,430 @@ namespace RandomMazeGeneration.Core
             this.RndSeed = new Random();
         }
 
+        /// <summary>
+        /// Generate the Maze for game play.
+        /// </summary>
+        /// <param name="StartX">X start location</param>
+        /// <param name="StartY">Y start location</param>
+        /// <param name="FinishX">X end location</param>
+        /// <param name="FinishY">Y end location</param>
         public void GenerateMaze(int StartX, int StartY, int FinishX, int FinishY)
         {
-            bool IsFinished = false;
-
             this.StartX = StartX;
             this.StartY = StartY;
 
             this.FinishX = FinishX;
             this.FinishY = FinishY;
 
-            // loop until we reached the FinishX and FinishY
-            while (!(IsFinished))
+            // generate the main maze
+            this.GenerateMainMaze(this.StartX, this.StartY, -1);
+#if DEBUG
+            Console.WriteLine("");
+#endif
+
+            // visit all the unvisited node
+            this.GenerateUnvisitedNode();
+#if DEBUG
+            Console.WriteLine("");
+#endif
+
+            // connect all the node, so all node will be accessible
+            this.RemoveBlock();
+        }
+
+        /// <summary>
+        /// This remove the non-accessible block from the generated map, so all the
+        /// node is accessible (no closed node).
+        /// </summary>
+        private void RemoveBlock()
+        {
+            int Direction;
+
+            // here we will check and ensure that all the path that already
+            // generated is accessible.
+
+            // first what we need to do is generate the heat map by traversing through
+            // all the maze, and update 1 for all the path that we visited
+            this.GenerateHeatMap(this.StartX, this.StartY, -1);
+
+#if DEBUG
+            Console.WriteLine("MAZE HEAT MAP");
+#endif
+            for (int i = 0; i < this.MaxY; i++)
             {
-                // traverse thru the maze and generate the path
-                IsFinished = this.RandomVisit(StartX, StartY, -1);
-                Console.WriteLine("");
-                for (int i = 0; i < this.MaxY; i++)
+                for (int j = 0; j < this.MaxX; j++)
                 {
-                    for (int j = 0; j < this.MaxX; j++)
+#if DEBUG
+                    Console.Write(this.HeatMap[j, i].ToString());
+#endif
+                    // check whether this is un-connected node?
+                    if (this.HeatMap[j, i] == 0)
                     {
-                        // check if this is not yet visited, if yes then start
-                        // fill this point onwards.
-                        if (this.MazeNode[j, i].HasVisited == false)
+                        // try to connect this node to nearest connected node
+                        // we can do this by checking in random direction
+                        // to knew which direction is already visited
+                        while (this.HeatMap[j, i] == 0)
                         {
-                            this.FillUnvisited(j, i, -1, false);
+
+                            Direction = (1 << (this.RndSeed.Next() % 4));
+                            switch (Direction)
+                            {
+                                case 1:
+                                    // check if we can go up?
+                                    if ((i - 1) >= 0)
+                                    {
+                                        // check if it's connected node?
+                                        if (this.HeatMap[j, (i - 1)] == 1)
+                                        {
+                                            // break the wall between these two
+                                            this.MazeNode[j, i].Up = true;
+                                            this.MazeNode[j, (i - 1)].Down = true;
+
+                                            // re-trace the heat map from this location
+                                            this.GenerateHeatMap(j, i, -1);
+                                        }
+                                    }
+                                    break;
+                                case 2:
+                                    // check if we can go right?
+                                    if ((j + 1) < this.MaxX)
+                                    {
+                                        // check if it's connected node?
+                                        if (this.HeatMap[(j + 1), i] == 1)
+                                        {
+                                            // break the wall between these two
+                                            this.MazeNode[j, i].Right = true;
+                                            this.MazeNode[(j + 1), i].Left = true;
+
+                                            // re-trace the heat map from this location
+                                            this.GenerateHeatMap(j, i, -1);
+                                        }
+                                    }
+                                    break;
+                                case 4:
+                                    // check if we can go down?
+                                    if ((i + 1) < this.MaxY)
+                                    {
+                                        // check if it's connected node?
+                                        if (this.HeatMap[j, (i + 1)] == 1)
+                                        {
+                                            // break the wall between these two
+                                            this.MazeNode[j, i].Down = true;
+                                            this.MazeNode[j, (i + 1)].Up = true;
+
+                                            // re-trace the heat map from this location
+                                            this.GenerateHeatMap(j, i, -1);
+                                        }
+                                    }
+                                    break;
+                                case 8:
+                                    // check if we can go left?
+                                    if ((j - 1) >= 0)
+                                    {
+                                        // check if it's connected node?
+                                        if (this.HeatMap[(j - 1), i] == 1)
+                                        {
+                                            // break the wall between these two
+                                            this.MazeNode[j, i].Left = true;
+                                            this.MazeNode[(j - 1), i].Right = true;
+
+                                            // re-trace the heat map from this location
+                                            this.GenerateHeatMap(j, i, -1);
+                                        }
+                                    }
+                                    break;
+                            }
                         }
+                    }
+                }
+#if DEBUG
+                Console.WriteLine("");
+#endif
+            }
+        }
+
+        /// <summary>
+        /// Traverse the Node data and generate the Heat Mape of the maze to
+        /// determine whether there are closed block on the maze or not?
+        /// Closed node will be indicated by value "0" on the heat map array.
+        /// </summary>
+        /// <param name="X">X location</param>
+        /// <param name="Y">Y location</param>
+        /// <param name="PrevMove">Previous move performed on the GenerateHeatMap function</param>
+        /// <returns></returns>
+        private bool GenerateHeatMap(int X, int Y, int PrevMove)
+        {
+            bool CheckUp = false,
+                 CheckRight = false,
+                 CheckDown = false,
+                 CheckLeft = false;
+
+            // check if we already visited this map or not?
+            if (this.HeatMap[X, Y] == 1)
+            {
+                // we already visit this node, no need to perform traverse again
+                return false;
+            }
+            else
+            {
+                // set the Check indicator based on the previous move, so we will not going
+                // to waste the iteration by re-visiting the previous location.
+                switch (PrevMove)
+                {
+                    case 1:
+                        // move up, so we don't need to move down
+                        CheckDown = true;
+                        break;
+                    case 2:
+                        // move right, so we don't need to move left
+                        CheckLeft = true;
+                        break;
+                    case 4:
+                        // move down, so we don't need to move up
+                        CheckUp = true;
+                        break;
+                    case 8:
+                        // move left, so we don't need to move right
+                        CheckRight = true;
+                        break;
+                }
+
+                // perform traverse from this node onwards.
+                // before doing that set this node heat map as 1
+                this.HeatMap[X, Y] = 1;
+
+                // check what direction is available for this node
+                // Up?
+                if (this.MazeNode[X, Y].Up && !CheckUp)
+                {
+                    // try to go up
+                    this.GenerateHeatMap(X, (Y - 1), 1);
+                }
+
+                // Right?
+                if (this.MazeNode[X, Y].Right && !CheckRight)
+                {
+                    // try to go right
+                    this.GenerateHeatMap((X + 1), Y, 2);
+                }
+
+                // Down?
+                if (this.MazeNode[X, Y].Down && !CheckDown)
+                {
+                    // try to go down
+                    this.GenerateHeatMap(X, (Y + 1), 4);
+                }
+
+                // Left?
+                if (this.MazeNode[X, Y].Left && !CheckLeft)
+                {
+                    // try to go left
+                    this.GenerateHeatMap((X - 1), Y, 8);
+                }
+            }
+
+            // defaulted to return false
+            return false;
+        }
+
+        /// <summary>
+        /// This function will generated all the node that not yet being visited,
+        /// so all the node can be connected later on.
+        /// </summary>
+        private void GenerateUnvisitedNode()
+        {
+            // loop for all the node, and traverse all the unvisited node
+            for (int i = 0; i < this.MaxY; i++)
+            {
+                for (int j = 0; j < this.MaxX; j++)
+                {
+                    // check if this node is unvisited?
+                    if (!this.MazeNode[j, i].HasVisited)
+                    {
+                        // traverse from this node, until we connect to the visited node
+                        this.FillUnvisitedNode(j, i, -1, false);
                     }
                 }
             }
         }
 
-        private bool FillUnvisited(int X, int Y, int PrevMove, bool Connected)
+        /// <summary>
+        /// Traverse to generate the Main Maze path.
+        /// </summary>
+        /// <param name="X">X location</param>
+        /// <param name="Y">Y location</param>
+        /// <param name="PrevMove">Previous move perform when generate the Main Maze path</param>
+        /// <returns></returns>
+        private bool GenerateMainMaze(int X, int Y, int PrevMove)
         {
+#if DEBUG
+            Console.Write("(" + X.ToString() + "," + Y.ToString() + ")");
+#endif
+            // Check indicator to knew whether we already check all the
+            // possible path of the maze or not?
+            bool CheckUp    = false,
+                 CheckRight = false,
+                 CheckDown  = false,
+                 CheckLeft  = false;
+
             int Direction;
 
-            bool UpCheck = false,
-                 DownCheck = false,
-                 LeftCheck = false,
-                 RightCheck = false;
-
-            int TriesAnotherDirection = 0;
-
-            // set the node to already visited
+            // set that we already visited this node, and this is a main node
             this.MazeNode[X, Y].HasVisited = true;
+            this.MazeNode[X, Y].MainNode = true;
 
-            // if not connected look for nearest node, if nearest node is already visited
-            // connect this node with that node
-            while (!(Connected))
+            // check if this is the finished location or not?
+            if (X == this.FinishX && Y == this.FinishY)
             {
-                // random check whether nearest node is available or not?
-                Direction = (1 << (this.RndSeed.Next(1, 16) % 4));
+                // return true to the previous stack
+                return true;
+            }
 
-                while (TriesAnotherDirection < 3 && Direction == PrevMove)
-                {
-                    Direction = (1 << (this.RndSeed.Next(1, 16) % 4));
-                    TriesAnotherDirection += 1;
-                }
+            // set the Check indicator based on the previous move, so we will not going
+            // to waste the iteration by re-visiting the previous location.
+            switch (PrevMove)
+            {
+                case 1:
+                    // move up, so we don't need to move down
+                    CheckDown = true;
+                    break;
+                case 2:
+                    // move right, so we don't need to move left
+                    CheckLeft = true;
+                    break;
+                case 4:
+                    // move down, so we don't need to move up
+                    CheckUp = true;
+                    break;
+                case 8:
+                    // move left, so we don't need to move right
+                    CheckRight = true;
+                    break;
+            }
 
-                // check whether current direction canceled previous direction or not?
-                if (PrevMove == 1 && Direction == 4) DownCheck = true;
-                if (PrevMove == 2 && Direction == 8) LeftCheck = true;
-                if (PrevMove == 4 && Direction == 1) UpCheck = true;
-                if (PrevMove == 8 && Direction == 2) RightCheck = true;
+            // after that, we can check the location of the X, Y to knew whether
+            // it's possible to go to Up, Right, Down, or Left direction or not?
+            if ((Y - 1) < 0)
+            {
+                // cannot move up
+                CheckUp = true;
+            }
+            if ((X + 1) >= this.MaxX)
+            {
+                // cannot move right
+                CheckRight = true;
+            }
+            if ((Y + 1) >= this.MaxY)
+            {
+                // cannot move down
+                CheckDown = true;
+            }
+            if ((X - 1) < 0)
+            {
+                // cannot move left
+                CheckLeft = true;
+            }
 
-                // check the move
+            // once we finished check all the possibilities then we can loop to the remaining
+            // direction that we can go to
+            while ((!CheckUp) || (!CheckRight) || (!CheckDown) || (!CheckLeft))
+            {
+                // randomize the direction, by perform bitwise function
+                Direction = (1 << (this.RndSeed.Next() % 4));
                 switch (Direction)
                 {
                     case 1:
-                        if (!UpCheck)
+                        // move UP, check whether we can perform UP direction or not?
+                        if (!CheckUp)
                         {
-                            UpCheck = true;
-                            // check if we got nearest neighboor on UP position
-                            if ((Y - 1) >= 0)
-                            {
-                                // break the wall between these two
-                                this.MazeNode[X, (Y - 1)].Down = true;
-                                this.MazeNode[X, Y].Up = true;
+                            // set CheckUp into true, since we already try the up direction
+                            CheckUp = true;
 
-                                // check whether it already been visited before or not?
-                                if (this.MazeNode[X, (Y - 1)].HasVisited || this.MazeNode[X, (Y - 1)].MainNode)
+                            // now check if we already visited the node or not?
+                            // if we not yet visit the node, then we can try to visit that node
+                            if(!this.MazeNode[X, (Y-1)].HasVisited)
+                            {
+#if DEBUG
+                                Console.Write("^");
+#endif
+                                this.MazeNode[X, Y].Up = true;
+                                this.MazeNode[X, (Y - 1)].Down = true;
+                                // node not yet being visited, try to visit the node
+                                if (this.GenerateMainMaze(X, (Y - 1), Direction))
                                 {
-                                    Connected = true;
-                                }
-                                else
-                                {
-                                    // the node is not yet being visited.
-                                    Connected = this.FillUnvisited(X, (Y - 1), Direction, Connected);
+                                    return true;
                                 }
                             }
                         }
                         break;
                     case 2:
-                        if (!RightCheck)
+                        // move RIGHT, check whether we can perform RIGHT direction or not?
+                        if (!CheckRight)
                         {
-                            RightCheck = true;
-                            // check if we got nearest neighboor on RIGHT position
-                            if ((X + 1) < this.MaxX)
-                            {
-                                // break the wall between these two
-                                this.MazeNode[(X + 1), Y].Left = true;
-                                this.MazeNode[X, Y].Right = true;
+                            // set CheckRight into true, since we already try the up direction
+                            CheckRight = true;
 
-                                // check whether it already been visited before or not?
-                                if (this.MazeNode[(X + 1), Y].HasVisited || this.MazeNode[(X + 1), Y].MainNode)
+                            // now check if we already visited the node or not?
+                            // if we not yet visit the node, then we can try to visit that node
+                            if (!this.MazeNode[(X + 1), Y].HasVisited)
+                            {
+#if DEBUG
+                                Console.Write(">");
+#endif
+                                this.MazeNode[X, Y].Right = true;
+                                this.MazeNode[(X + 1), Y].Left = true;
+                                // node not yet being visited, try to visit the node
+                                if (this.GenerateMainMaze((X + 1), Y, Direction))
                                 {
-                                    Connected = true;
-                                }
-                                else
-                                {
-                                    // the node is not yet being visited.
-                                    Connected = this.FillUnvisited((X + 1), Y, Direction, Connected);
+                                    return true;
                                 }
                             }
                         }
                         break;
                     case 4:
-                        if (!DownCheck)
+                        // move DOWN, check whether we can perform DOWN direction or not?
+                        if (!CheckDown)
                         {
-                            DownCheck = true;
-                            // check if we got nearest neighboor on DOWN position
-                            if ((Y + 1) < this.MaxY)
-                            {
-                                // break the wall between these two
-                                this.MazeNode[X, (Y + 1)].Up = true;
-                                this.MazeNode[X, Y].Down = true;
+                            // set CheckDown into true, since we already try the up direction
+                            CheckDown = true;
 
-                                // check whether it already been visited before or not?
-                                if (this.MazeNode[X, (Y + 1)].HasVisited || this.MazeNode[X, (Y + 1)].MainNode)
+                            // now check if we already visited the node or not?
+                            // if we not yet visit the node, then we can try to visit that node
+                            if (!this.MazeNode[X, (Y + 1)].HasVisited)
+                            {
+#if DEBUG
+                                Console.Write("V");
+#endif
+                                this.MazeNode[X, Y].Down = true;
+                                this.MazeNode[X, (Y + 1)].Up = true;
+                                // node not yet being visited, try to visit the node
+                                if (this.GenerateMainMaze(X, (Y + 1), Direction))
                                 {
-                                    Connected = true;
-                                }
-                                else
-                                {
-                                    // the node is not yet being visited.
-                                    Connected = this.FillUnvisited(X, (Y + 1), Direction, Connected);
+                                    return true;
                                 }
                             }
                         }
                         break;
                     case 8:
-                        if (!LeftCheck)
+                        // move LEFT, check whether we can perform LEFT direction or not?
+                        if (!CheckLeft)
                         {
-                            LeftCheck = true;
-                            // check if we got nearest neighboor on DOWN position
-                            if ((X - 1) >= 0)
-                            {
-                                // break the wall between these two
-                                this.MazeNode[(X - 1), Y].Right = true;
-                                this.MazeNode[X, Y].Left = true;
+                            // set CheckLeft into true, since we already try the up direction
+                            CheckLeft = true;
 
-                                // check whether it already been visited before or not?
-                                if (this.MazeNode[(X - 1), Y].HasVisited || this.MazeNode[(X - 1), Y].MainNode)
+                            // now check if we already visited the node or not?
+                            // if we not yet visit the node, then we can try to visit that node
+                            if (!this.MazeNode[(X - 1), Y].HasVisited)
+                            {
+#if DEBUG
+                                Console.Write("<");
+#endif
+                                this.MazeNode[X, Y].Left = true;
+                                this.MazeNode[(X - 1), Y].Right = true;
+                                // node not yet being visited, try to visit the node
+                                if (this.GenerateMainMaze((X - 1), Y, Direction))
                                 {
-                                    Connected = true;
-                                }
-                                else
-                                {
-                                    Connected = this.FillUnvisited((X - 1), Y, Direction, Connected);
+                                    return true;
                                 }
                             }
                         }
@@ -210,250 +496,180 @@ namespace RandomMazeGeneration.Core
                 }
             }
 
-            // default to return false
-            return Connected;
+            // defaulted to return false
+            return false;
         }
 
-        private bool RandomVisit(int X, int Y, int PrevMove)
+        /// <summary>
+        /// Traverse and fill all the unvisited node, so all the node can be connected
+        /// later on.
+        /// </summary>
+        /// <param name="X">X location</param>
+        /// <param name="Y">Y location</param>
+        /// <param name="PrevMove">Previous move performed when filling the unvisited node</param>
+        /// <param name="Connected">Indicator to check whether node already connected to another visited node or not?</param>
+        /// <returns></returns>
+        private bool FillUnvisitedNode(int X, int Y, int PrevMove, bool Connected)
         {
-            Console.Write("(" + X.ToString() + "," + Y.ToString() + ")");
-            // check if we visited all the node
-            bool AllVisited = false;
-            int TriesSameAsPrev = 0;
-            bool CheckUp = false, CheckRight = false, CheckDown = false, CheckLeft = false;
-            int dir;
+            // Check indicator to knew whether we already check all the
+            // possible path of the maze or not?
+            bool CheckUp = false,
+                 CheckRight = false,
+                 CheckDown = false,
+                 CheckLeft = false;
 
-            // we already visited this node, mark this node as visited
+            int Direction;
+
+            // set that we already visited this node, and this is a main node
             this.MazeNode[X, Y].HasVisited = true;
             this.MazeNode[X, Y].MainNode = true;
 
-            // check the previous move and set the wall as open
+            // set the Check indicator based on the previous move, so we will not going
+            // to waste the iteration by re-visiting the previous location.
             switch (PrevMove)
             {
-                // Previous move is UP
                 case 1:
-                    this.MazeNode[X, Y].Down = true;
+                    // move up, so we don't need to move down
                     CheckDown = true;
                     break;
-                // Previous move is RIGHT
                 case 2:
-                    this.MazeNode[X, Y].Left = true;
+                    // move right, so we don't need to move left
                     CheckLeft = true;
                     break;
-                // Previous move is DOWN
                 case 4:
-                    this.MazeNode[X, Y].Up = true;
+                    // move down, so we don't need to move up
                     CheckUp = true;
                     break;
-                // Previous move is LEFT
                 case 8:
-                    this.MazeNode[X, Y].Right = true;
+                    // move left, so we don't need to move right
                     CheckRight = true;
-                    break;
-                default:
-                    // nothing to do, probably this is the first node
                     break;
             }
 
-            // bound the check to knew which direction that we actually can visit
-            if ((X - 1) < 0)
+            // after that, we can check the location of the X, Y to knew whether
+            // it's possible to go to Up, Right, Down, or Left direction or not?
+            if ((Y - 1) <= 0)
             {
-                // cannot move to left
-                CheckLeft = true;
+                // cannot move up
+                CheckUp = true;
             }
             if ((X + 1) >= this.MaxX)
             {
-                // cannot move to right
+                // cannot move right
                 CheckRight = true;
-            }
-            if ((Y - 1) < 0)
-            {
-                // cannot move to up
-                CheckUp = true;
             }
             if ((Y + 1) >= this.MaxY)
             {
-                // cannot move to down
+                // cannot move down
                 CheckDown = true;
             }
-
-            // loop if we not visit all 
-            while (!(AllVisited))
+            if ((X - 1) <= 0)
             {
-                // we will only going to be finished if we already
-                // reached the Finished X and Y
-                if (X == this.FinishX &&
-                    Y == this.FinishY)
-                {
-                    return true;
-                }
-                else
-                {
-                    // check if we already visit all direction?
-                    if (CheckUp && CheckRight && CheckDown && CheckLeft)
-                    {
-                        AllVisited = true;
-                    }
-                    else
-                    {
-                        // not all direction is visited.
-                        // randomize which neighboor we should visit?
-                        dir = (1 << (this.RndSeed.Next(1, 128) % 4));
+                // cannot move left
+                CheckLeft = true;
+            }
 
-                        // check whether current direction same as previous direction?
-                        // if so, then check the SameAsPrev variable, whether it's already set as false
-                        // or not?
-                        // if it's still set as true then skip this direction
-                        if (dir == PrevMove)
+            // loop until this one is connected to another node that we already visited
+            while (!Connected)
+            {
+                // randomize the direction, by perform bitwise function
+                Direction = (1 << (this.RndSeed.Next() % 4));
+                switch (Direction)
+                {
+                    case 1:
+                        // move UP, check whether we can perform UP direction or not?
+                        if (!CheckUp)
                         {
-                            TriesSameAsPrev = 0;
-                            while (TriesSameAsPrev < 3 && dir == PrevMove)
+                            // set CheckUp into true, since we already try the up direction
+                            CheckUp = true;
+                            this.MazeNode[X, Y].Up = true;
+                            this.MazeNode[X, (Y - 1)].Down = true;
+
+                            // check if the node is already visited or not?
+                            if (this.MazeNode[X, (Y - 1)].HasVisited)
                             {
-                                dir = (1 << (this.RndSeed.Next(1, 128) % 4));
-                                TriesSameAsPrev += 1;
+                                // already visited, connect to this node
+                                Connected = true;
                             }
-                            
-                            if (dir == PrevMove) Console.Write("#");
+                            else
+                            {
+                                // node is never been visited, let's visit this node first
+                                Connected = this.FillUnvisitedNode(X, (Y-1), Direction, Connected);
+                            }
                         }
-
-                        // check the direction we will going
-                        switch (dir)
+                        break;
+                    case 2:
+                        // move RIGHT, check whether we can perform RIGHT direction or not?
+                        if (!CheckRight)
                         {
-                            // Going UP
-                            case 1:
-                                if (!CheckUp)
-                                {
-                                    CheckUp = true;
+                            // set CheckRight into true, since we already try the up direction
+                            CheckRight = true;
+                            this.MazeNode[X, Y].Right = true;
+                            this.MazeNode[(X + 1), Y].Left = true;
 
-                                    // check previous move and ensure that this move not canceled
-                                    // the previous move. If so the just set the move as true, no need to
-                                    // perform any move here
-                                    if (!(PrevMove == 4))
-                                    {
-                                        // move is legal, now check whether we can visit this neighboor or not?
-                                        if ((Y - 1) >= 0)
-                                        {
-                                            // we can visit this node, check whether this node is already visited
-                                            // or not?
-                                            if (!(this.MazeNode[X, Y - 1].HasVisited))
-                                            {
-                                                Console.Write("^");
-                                                // Set current direction as true
-                                                this.MazeNode[X, Y].Up = true;
-
-                                                // not yet being visited, try to visit the node
-                                                if (RandomVisit(X, Y - 1, dir))
-                                                {
-                                                    return true;
-                                                }
-                                            }
-                                        }
-                                    }
-                                }
-                                break;
-                            // Going RIGHT
-                            case 2:
-                                if (!CheckRight)
-                                {
-                                    CheckRight = true;
-
-                                    // check previous move and ensure that this move not canceled
-                                    // the previous move. If so the just set the move as true, no need to
-                                    // perform any move here
-                                    if (!(PrevMove == 8))
-                                    {
-                                        // move is legal, now check whether we can visit this neighboor or not?
-                                        if ((X + 1) < this.MaxX)
-                                        {
-                                            // we can visit this node, check whether this node is already visited
-                                            // or not?
-                                            if (!(this.MazeNode[X + 1, Y].HasVisited))
-                                            {
-                                                Console.Write(">");
-                                                // Set current direction as true
-                                                this.MazeNode[X, Y].Right = true;
-
-                                                // not yet being visited, try to visit the node
-                                                if (RandomVisit(X + 1, Y, dir))
-                                                {
-                                                    return true;
-                                                }
-                                            }
-                                        }
-                                    }
-                                }
-                                break;
-                            // Going DOWN
-                            case 4:
-                                if (!CheckDown)
-                                {
-                                    CheckDown = true;
-
-                                    // check previous move and ensure that this move not canceled
-                                    // the previous move. If so the just set the move as true, no need to
-                                    // perform any move here
-                                    if (!(PrevMove == 1))
-                                    {
-                                        // move is legal, now check whether we can visit this neighboor or not?
-                                        if ((Y + 1) < this.MaxY)
-                                        {
-                                            // we can visit this node, check whether this node is already visited
-                                            // or not?
-                                            if (!(this.MazeNode[X, Y + 1].HasVisited))
-                                            {
-                                                Console.Write("V");
-                                                // Set current direction as true
-                                                this.MazeNode[X, Y].Down = true;
-
-                                                // not yet being visited, try to visit the node
-                                                if (RandomVisit(X, Y + 1, dir))
-                                                {
-                                                    return true;
-                                                }
-                                            }
-                                        }
-                                    }
-                                }
-                                break;
-                            // Going LEFT
-                            case 8:
-                                if (!CheckLeft)
-                                {
-                                    CheckLeft = true;
-
-                                    // check previous move and ensure that this move not canceled
-                                    // the previous move. If so the just set the move as true, no need to
-                                    // perform any move here
-                                    if (!(PrevMove == 1))
-                                    {
-                                        // move is legal, now check whether we can visit this neighboor or not?
-                                        if ((X - 1) >= 0)
-                                        {
-                                            // we can visit this node, check whether this node is already visited
-                                            // or not?
-                                            if (!(this.MazeNode[X - 1, Y].HasVisited))
-                                            {
-                                                Console.Write("<");
-                                                // Set current direction as true
-                                                this.MazeNode[X, Y].Left = true;
-
-                                                // not yet being visited, try to visit the node
-                                                if (RandomVisit(X - 1, Y, dir))
-                                                {
-                                                    return true;
-                                                }
-                                            }
-                                        }
-                                    }
-                                }
-                                break;
+                            // check if the node is already visited or not?
+                            if (this.MazeNode[(X + 1), Y].HasVisited)
+                            {
+                                // already visited, connect to this node
+                                Connected = true;
+                            }
+                            else
+                            {
+                                // node is never been visited, let's visit this node first
+                                Connected = this.FillUnvisitedNode((X + 1), Y, Direction, Connected);
+                            }
                         }
-                    }
+                        break;
+                    case 4:
+                        // move DOWN, check whether we can perform DOWN direction or not?
+                        if (!CheckDown)
+                        {
+                            // set CheckDown into true, since we already try the up direction
+                            CheckDown = true;
+                            this.MazeNode[X, Y].Down = true;
+                            this.MazeNode[X, (Y + 1)].Up = true;
+
+                            // check if the node is already visited or not?
+                            if (this.MazeNode[X, (Y + 1)].HasVisited)
+                            {
+                                // already visited, connect to this node
+                                Connected = true;
+                            }
+                            else
+                            {
+                                // node is never been visited, let's visit this node first
+                                Connected = this.FillUnvisitedNode(X, (Y + 1), Direction, Connected);
+                            }
+                        }
+                        break;
+                    case 8:
+                        // move LEFT, check whether we can perform LEFT direction or not?
+                        if (!CheckLeft)
+                        {
+                            // set CheckLeft into true, since we already try the up direction
+                            CheckLeft = true;
+                            this.MazeNode[X, Y].Left = true;
+                            this.MazeNode[(X - 1), Y].Right = true;
+
+                            // check if the node is already visited or not?
+                            if (this.MazeNode[(X - 1), Y].HasVisited)
+                            {
+                                // already visited, connect to this node
+                                Connected = true;
+                            }
+                            else
+                            {
+                                // node is never been visited, let's visit this node first
+                                Connected = this.FillUnvisitedNode((X - 1), Y, Direction, Connected);
+                            }
+                        }
+                        break;
                 }
             }
 
-            // return default to false
-            return false;
+            // return true to the stack, since we will only going to be exit from
+            // the loop if we already connected to the visited node
+            return true;
         }
     }
 }

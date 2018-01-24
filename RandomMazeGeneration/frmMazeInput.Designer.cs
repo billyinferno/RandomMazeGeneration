@@ -62,7 +62,7 @@
             this.txtX.MaxLength = 2;
             this.txtX.Name = "txtX";
             this.txtX.Size = new System.Drawing.Size(37, 21);
-            this.txtX.TabIndex = 2;
+            this.txtX.TabIndex = 1;
             this.txtX.Text = "20";
             this.txtX.TextAlign = System.Windows.Forms.HorizontalAlignment.Center;
             // 

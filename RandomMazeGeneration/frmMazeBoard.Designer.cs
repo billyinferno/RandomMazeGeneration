@@ -55,20 +55,23 @@
             this.imgMazeBoard.Images.SetKeyName(15, "maze_15");
             this.imgMazeBoard.Images.SetKeyName(16, "maze_start");
             this.imgMazeBoard.Images.SetKeyName(17, "maze_end");
+            this.imgMazeBoard.Images.SetKeyName(18, "maze_player");
+            this.imgMazeBoard.Images.SetKeyName(19, "maze_finished");
             // 
             // frmMazeBoard
             // 
             this.AutoScaleDimensions = new System.Drawing.SizeF(6F, 13F);
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
-            this.ClientSize = new System.Drawing.Size(60, 30);
+            this.ClientSize = new System.Drawing.Size(120, 30);
             this.Font = new System.Drawing.Font("Tahoma", 8.25F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
             this.FormBorderStyle = System.Windows.Forms.FormBorderStyle.FixedSingle;
             this.MaximizeBox = false;
             this.Name = "frmMazeBoard";
             this.StartPosition = System.Windows.Forms.FormStartPosition.CenterScreen;
             this.Text = "Maze Board";
-            this.Load += new System.EventHandler(this.frmMazeBoard_Load);
+            this.FormClosed += new System.Windows.Forms.FormClosedEventHandler(this.frmMazeBoard_FormClosed);
             this.Paint += new System.Windows.Forms.PaintEventHandler(this.frmMazeBoard_Paint);
+            this.KeyDown += new System.Windows.Forms.KeyEventHandler(this.frmMazeBoard_KeyDown);
             this.MouseClick += new System.Windows.Forms.MouseEventHandler(this.frmMazeBoard_MouseClick);
             this.ResumeLayout(false);
 
