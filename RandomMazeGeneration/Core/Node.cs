@@ -39,6 +39,20 @@ namespace RandomMazeGeneration.Core
         }
 
         /// <summary>
+        /// This function will reset all the node value with the initial value.
+        /// </summary>
+        public void ResetNode()
+        {
+            // reset the node value to the initial value
+            this.HasVisited = false;
+            this.MainNode = false;
+            this.Up = false;
+            this.Down = false;
+            this.Left = false;
+            this.Right = false;
+        }
+
+        /// <summary>
         /// Get the image index of the node based on the direction set on the Node.
         /// </summary>
         /// <returns>Image index for the Node</returns>

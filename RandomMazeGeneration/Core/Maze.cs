@@ -19,7 +19,7 @@ namespace RandomMazeGeneration.Core
         private int[,] HeatMap;
 
         public int MaxX { get; private set; }
-        public int MaxY { get; set; }
+        public int MaxY { get; private set; }
 
         public int StartX { get; private set; }
         public int StartY { get; private set; }
@@ -63,6 +63,25 @@ namespace RandomMazeGeneration.Core
 
             // set the RandomSeed
             this.RndSeed = new Random();
+        }
+
+        /// <summary>
+        /// Override the maximum value of the MaximumX and MaximumY value.
+        /// The value of this should be between the length of the MazeNode size.
+        /// </summary>
+        /// <param name="X">New maximum X size</param>
+        /// <param name="Y">New maximum Y size</param>
+        public void SetMaximum(int X, int Y)
+        {
+            if (((X - 1) <= this.MazeNode.GetLength(0)) && ((Y - 1) <= this.MazeNode.GetLength(1)))
+            {
+                this.MaxX = X;
+                this.MaxY = Y;
+            }
+            else
+            {
+                throw new Exception("Cannot override the maximumn length, maximum length out of Maze Node Array boundaries.");
+            }
         }
 
         /// <summary>
